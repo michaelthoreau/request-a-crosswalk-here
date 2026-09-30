@@ -5,7 +5,7 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import { CrosswalkMap } from "@/components/map/crosswalk-map"
 import { MapOverlay } from "@/components/map/map-overlay"
-import { StreetView } from "@/components/map/street-view"
+import { StreetViewButton } from "@/components/map/street-view"
 import { Button, buttonVariants } from "@/components/ui/button"
 import type { CrosswalkPoint } from "@/lib/crosswalks"
 import type { LatLng } from "@/lib/geo"
@@ -57,7 +57,7 @@ export function HomeMap({ points }: { points: CrosswalkPoint[] }) {
     <div className="relative h-map-screen overflow-hidden">
       <CrosswalkMap points={points} onMapClick={setPin} pin={pin} className="absolute inset-0" />
       <MapOverlay contentClassName={pin ? undefined : "hidden md:flex"}>
-        {pin && <StreetView point={pin} />}
+        {pin && <StreetViewButton point={pin} className="w-full" />}
         {actions("hidden w-full md:flex")}
       </MapOverlay>
       {actions("absolute inset-x-4 bottom-8 z-10 *:shadow-lg md:hidden")}

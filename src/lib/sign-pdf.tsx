@@ -16,51 +16,98 @@ const colors = {
   paper: "#F8F8F8",
   seagreen: "#3B7A4F",
   powderblue: "#C4E4EA",
+  white: "#FFFFFF",
 }
 
-const styles = StyleSheet.create({
-  page: { backgroundColor: "#FFFFFF", fontFamily: "Helvetica", color: colors.ink },
-  header: { backgroundColor: colors.green, paddingVertical: 16, paddingHorizontal: PAGE_MARGIN + 4 },
-  kicker: { color: colors.paper, fontFamily: "Helvetica-Bold", fontSize: 26, lineHeight: 1.1 },
-  title: { color: colors.paper, fontFamily: "Helvetica-Bold", fontSize: 46, lineHeight: 1 },
-  body: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: PAGE_MARGIN },
-  scan: { fontFamily: "Helvetica-Bold", fontSize: 18, marginBottom: 10, textAlign: "center" },
-  frameOuter: {
-    width: FRAME_WIDTH,
-    borderWidth: 5,
-    borderColor: colors.green,
-    borderRadius: 22,
-    padding: 5,
-    backgroundColor: colors.powderblue,
-  },
-  frameInner: {
-    borderWidth: 2,
-    borderColor: colors.seagreen,
-    borderRadius: 14,
-    padding: 12,
-    backgroundColor: "#FFFFFF",
-  },
-  qr: { width: QR_SIZE, height: QR_SIZE },
-  site: { fontFamily: "Helvetica-Bold", fontSize: 22, color: colors.green, marginTop: 10 },
-  permalink: { fontSize: 9, marginTop: 2 },
-  location: { fontSize: 11, marginTop: 8, textAlign: "center", color: colors.seagreen },
-  footer: { backgroundColor: colors.green, height: 14 },
-})
+export const SIGN_VARIANTS = ["color", "print"] as const
+export type SignVariant = (typeof SIGN_VARIANTS)[number]
 
-type SignProps = { id: string; label: string | null; locality: string | null; qr: string }
+// "print" avoids large ink fills so it's cheap and crisp on a black-and-white printer.
+const themes = {
+  color: {
+    headerBg: colors.green,
+    headerText: colors.paper,
+    headerRule: colors.green,
+    frame: colors.green,
+    frameGap: colors.powderblue,
+    innerFrame: colors.seagreen,
+    site: colors.green,
+    location: colors.seagreen,
+    footer: { backgroundColor: colors.green, height: 14 },
+  },
+  print: {
+    headerBg: colors.white,
+    headerText: colors.ink,
+    headerRule: colors.ink,
+    frame: colors.ink,
+    frameGap: colors.white,
+    innerFrame: colors.ink,
+    site: colors.ink,
+    location: colors.ink,
+    footer: { backgroundColor: colors.ink, height: 3 },
+  },
+} satisfies Record<SignVariant, unknown>
 
-function Sign({ id, label, locality, qr }: SignProps) {
+const makeStyles = (t: (typeof themes)[SignVariant]) =>
+  StyleSheet.create({
+    page: { backgroundColor: colors.white, fontFamily: "Helvetica", color: colors.ink },
+    header: {
+      backgroundColor: t.headerBg,
+      borderBottomWidth: 3,
+      borderBottomColor: t.headerRule,
+      paddingVertical: 16,
+      paddingHorizontal: PAGE_MARGIN + 4,
+    },
+    kicker: { color: t.headerText, fontFamily: "Helvetica-Bold", fontSize: 26, lineHeight: 1.1 },
+    title: { color: t.headerText, fontFamily: "Helvetica-Bold", fontSize: 46, lineHeight: 1 },
+    body: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: PAGE_MARGIN },
+    scan: { fontFamily: "Helvetica-Bold", fontSize: 18, marginBottom: 10, textAlign: "center" },
+    frameOuter: {
+      width: FRAME_WIDTH,
+      borderWidth: 5,
+      borderColor: t.frame,
+      borderRadius: 22,
+      padding: 5,
+      backgroundColor: t.frameGap,
+    },
+    frameInner: {
+      borderWidth: 2,
+      borderColor: t.innerFrame,
+      borderRadius: 14,
+      padding: 12,
+      backgroundColor: colors.white,
+    },
+    qr: { width: QR_SIZE, height: QR_SIZE },
+    site: { fontFamily: "Helvetica-Bold", fontSize: 22, color: t.site, marginTop: 10 },
+    permalink: { fontSize: 9, marginTop: 2 },
+    location: { fontSize: 11, marginTop: 8, textAlign: "center", color: t.location },
+    footer: t.footer,
+  })
+
+const stylesByVariant = {
+  color: makeStyles(themes.color),
+  print: makeStyles(themes.print),
+}
+
+type SignProps = {
+  id: string
+  label: string | null
+  locality: string | null
+  qr: string
+  variant: SignVariant
+}
+
+function Sign({ id, label, locality, qr, variant }: SignProps) {
+  const styles = stylesByVariant[variant]
   return (
     <Document title={`Request a Crosswalk Here${label ? `: ${label}` : ""}`} author={SITE_HOST}>
       <Page size={HALF_LETTER} style={styles.page}>
         <View style={styles.header}>
           <Text style={styles.kicker}>Request a</Text>
-          <Text style={styles.title}>
-            <Text style={{ textDecoration: "underline" }}>Crosswalk</Text> Here
-          </Text>
+          <Text style={styles.title}>Crosswalk Here</Text>
         </View>
         <View style={styles.body}>
-          <Text style={styles.scan}>Scan to add your name</Text>
+          <Text style={styles.scan}>Scan to add your support</Text>
           <View style={styles.frameOuter}>
             <View style={styles.frameInner}>
               {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image has no alt */}
@@ -84,7 +131,7 @@ export async function renderSignPdf(crosswalk: Omit<SignProps, "qr">) {
     errorCorrectionLevel: "M",
     margin: 0,
     width: 800,
-    color: { dark: colors.ink, light: "#FFFFFF" },
+    color: { dark: colors.ink, light: colors.white },
   })
   return renderToBuffer(<Sign {...crosswalk} qr={qr} />)
 }

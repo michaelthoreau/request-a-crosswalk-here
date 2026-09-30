@@ -22,7 +22,7 @@ async function send({ to, subject, paragraphs, cta = [] }: Email) {
   const html = `<!doctype html><html><body style="margin:0;background:#F8F8F8;font-family:Helvetica,Arial,sans-serif;color:#061A1E">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">
 <table role="presentation" width="100%" style="max-width:520px;background:#ffffff;border-radius:12px;overflow:hidden">
-<tr><td style="background:#105028;color:#F8F8F8;padding:20px 28px;font-size:18px;font-weight:bold">Request a <span style="text-decoration:underline">Crosswalk</span> Here</td></tr>
+<tr><td style="background:#105028;color:#F8F8F8;padding:20px 28px;font-size:18px;font-weight:bold">Request a Crosswalk Here</td></tr>
 <tr><td style="padding:28px;font-size:16px;line-height:1.5">
 ${paragraphs.map((p) => `<p style="margin:0 0 16px">${esc(p)}</p>`).join("")}
 ${cta

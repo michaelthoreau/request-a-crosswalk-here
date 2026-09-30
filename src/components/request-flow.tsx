@@ -6,7 +6,7 @@ import { lookupPoint, requestCrosswalk } from "@/app/actions"
 import { ContactFields } from "@/components/contact-fields"
 import { LocationPicker } from "@/components/map/location-picker"
 import { MapOverlay } from "@/components/map/map-overlay"
-import { StreetView } from "@/components/map/street-view"
+import { StreetViewButton } from "@/components/map/street-view"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -112,7 +112,7 @@ export function RequestFlow({
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <StreetView point={picked} />
+              <StreetViewButton point={picked} />
             </CardContent>
             {showNearby && (
               <CardContent className="flex flex-col gap-3">
