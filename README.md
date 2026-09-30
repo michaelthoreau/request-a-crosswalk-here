@@ -4,7 +4,7 @@
 
 > **Note:** This app is 100% vibe coded, but also we should have more crosswalks.
 
-Next.js 16, shadcn/ui (Base UI), Drizzle + libSQL (SQLite locally, Turso in prod), MapLibre + OpenFreeMap tiles, OpenStreetMap Overpass, Postmark, react-pdf.
+Next.js 16, shadcn/ui (Base UI), Drizzle + libSQL (SQLite locally, Turso in prod), MapLibre + OpenFreeMap tiles, OpenStreetMap Overpass, Resend, react-pdf.
 
 ## Setup
 
@@ -15,7 +15,7 @@ pnpm db:migrate
 pnpm dev
 ```
 
-Without `POSTMARK_SERVER_TOKEN`, emails (including magic links) are printed to the server console.
+Without `RESEND_API_KEY`, emails (including magic links) are printed to the server console.
 
 ## Flows
 

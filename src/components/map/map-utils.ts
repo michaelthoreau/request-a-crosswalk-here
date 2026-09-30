@@ -8,6 +8,27 @@ export const MARKER_HIGHLIGHT_COLOR = "#105028"
 
 export const loadMapLibre = () => import("maplibre-gl").then((m) => m.default ?? m)
 
+/** Popup body for a crosswalk dot; built with DOM APIs so labels are never parsed as HTML. */
+export function crosswalkPopupContent(properties: unknown) {
+  const { id, label, count } = properties as { id: string; label?: string | null; count: number }
+  const root = document.createElement("div")
+  root.className = "flex flex-col gap-1 p-1 text-sm text-foreground"
+  if (label) {
+    const title = document.createElement("strong")
+    title.textContent = label
+    root.append(title)
+  }
+  const meta = document.createElement("span")
+  meta.className = "text-muted-foreground"
+  meta.textContent = `${count} ${count === 1 ? "supporter" : "supporters"}`
+  const link = document.createElement("a")
+  link.href = `/c/${encodeURIComponent(id)}`
+  link.className = "font-medium text-primary underline underline-offset-4"
+  link.textContent = "Open this request"
+  root.append(meta, link)
+  return root
+}
+
 type MapView = { center: [number, number]; zoom: number }
 const VIEW_KEY = "rach:map-view"
 

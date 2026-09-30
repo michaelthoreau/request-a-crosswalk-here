@@ -12,6 +12,7 @@ import {
   MARKER_HIGHLIGHT_COLOR,
   WORLD_VIEW,
   boundsOf,
+  crosswalkPopupContent,
   loadMapLibre,
   loadView,
   saveView,
@@ -119,31 +120,9 @@ export function CrosswalkMap({
         map.on("click", "crosswalks", (e) => {
           const feature = e.features?.[0]
           if (!feature || feature.geometry.type !== "Point") return
-          const { id, label, count } = feature.properties as {
-            id: string
-            label?: string | null
-            count: number
-          }
-
-          const root = document.createElement("div")
-          root.className = "flex flex-col gap-1 p-1 text-sm text-foreground"
-          if (label) {
-            const title = document.createElement("strong")
-            title.textContent = label
-            root.append(title)
-          }
-          const meta = document.createElement("span")
-          meta.className = "text-muted-foreground"
-          meta.textContent = `${count} ${count === 1 ? "supporter" : "supporters"}`
-          const link = document.createElement("a")
-          link.href = `/c/${encodeURIComponent(id)}`
-          link.className = "font-medium text-primary underline underline-offset-4"
-          link.textContent = "View and add your name"
-          root.append(meta, link)
-
           new maplibregl.Popup({ offset: 12 })
             .setLngLat(feature.geometry.coordinates as [number, number])
-            .setDOMContent(root)
+            .setDOMContent(crosswalkPopupContent(feature.properties))
             .addTo(map!)
         })
       })

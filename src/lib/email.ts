@@ -1,10 +1,8 @@
 import "server-only"
-import { ServerClient } from "postmark"
 import { atPlace } from "./share-text"
 import { SITE_URL, crosswalkUrl } from "./site"
 
-const token = process.env.POSTMARK_SERVER_TOKEN
-const client = token ? new ServerClient(token) : null
+const API_KEY = process.env.RESEND_API_KEY
 const FROM = process.env.EMAIL_FROM ?? "Request a Crosswalk Here <hello@requestacrosswalkhere.org>"
 
 type Email = { to: string; subject: string; paragraphs: string[]; cta?: { label: string; url: string }[] }
@@ -35,18 +33,16 @@ ${cta
 <p style="font-size:12px;color:#5B5B66;margin-top:16px"><a href="${SITE_URL}" style="color:#5B5B66">requestacrosswalkhere.org</a></p>
 </td></tr></table></body></html>`
 
-  if (!client) {
+  if (!API_KEY) {
     console.info(`\n[email] to=${to}\nsubject: ${subject}\n\n${text}\n`)
     return
   }
-  await client.sendEmail({
-    From: FROM,
-    To: to,
-    Subject: subject,
-    TextBody: text,
-    HtmlBody: html,
-    MessageStream: "outbound",
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ from: FROM, to, subject, text, html }),
   })
+  if (!res.ok) throw new Error(`Resend ${res.status}: ${await res.text()}`)
 }
 
 const verifyUrl = (token: string) => `${SITE_URL}/api/verify?token=${encodeURIComponent(token)}`

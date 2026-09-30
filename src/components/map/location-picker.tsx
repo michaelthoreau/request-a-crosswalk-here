@@ -12,6 +12,7 @@ import {
   MARKER_HIGHLIGHT_COLOR,
   WORLD_VIEW,
   boundsOf,
+  crosswalkPopupContent,
   loadMapLibre,
   loadView,
   saveView,
@@ -68,7 +69,25 @@ export function LocationPicker({ points, value, onChange, className }: Props) {
       markerRef.current = marker
       if (initial) marker.setLngLat([initial.lng, initial.lat]).addTo(map)
 
-      map.on("click", (e) => onChangeRef.current({ lat: e.lngLat.lat, lng: e.lngLat.lng }))
+      map.on("click", (e) => {
+        const [feature] = map.getLayer("crosswalks")
+          ? map.queryRenderedFeatures(e.point, { layers: ["crosswalks"] })
+          : []
+        if (feature?.geometry.type === "Point") {
+          new maplibregl.Popup({ offset: 12 })
+            .setLngLat(feature.geometry.coordinates as [number, number])
+            .setDOMContent(crosswalkPopupContent(feature.properties))
+            .addTo(map)
+          return
+        }
+        onChangeRef.current({ lat: e.lngLat.lat, lng: e.lngLat.lng })
+      })
+      map.on("mouseenter", "crosswalks", () => {
+        map.getCanvas().style.cursor = "pointer"
+      })
+      map.on("mouseleave", "crosswalks", () => {
+        map.getCanvas().style.cursor = ""
+      })
       map.on("load", () => {
         map.addSource("crosswalks", { type: "geojson", data: toFeatureCollection(points) })
         map.addLayer({
