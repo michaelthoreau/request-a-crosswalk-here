@@ -1,16 +1,30 @@
 import "server-only"
+import { Buffer } from "node:buffer"
 import { atPlace } from "./share-text"
+import { renderSignPdf } from "./sign-pdf"
 import { SITE_URL, crosswalkUrl } from "./site"
 
 const API_KEY = process.env.RESEND_API_KEY
 const FROM = process.env.EMAIL_FROM ?? "Request a Crosswalk Here <hello@requestacrosswalkhere.org>"
 
-type Email = { to: string; subject: string; paragraphs: string[]; cta?: { label: string; url: string }[] }
+type Attachment = {
+  filename: string
+  content: string
+  content_type?: string
+}
+
+type Email = {
+  to: string
+  subject: string
+  paragraphs: string[]
+  cta?: { label: string; url: string }[]
+  attachments?: Attachment[]
+}
 
 const esc = (s: string) =>
   s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`)
 
-async function send({ to, subject, paragraphs, cta = [] }: Email) {
+async function send({ to, subject, paragraphs, cta = [], attachments }: Email) {
   const text = [
     ...paragraphs,
     ...cta.map((c) => `${c.label}: ${c.url}`),
@@ -34,13 +48,23 @@ ${cta
 </td></tr></table></body></html>`
 
   if (!API_KEY) {
-    console.info(`\n[email] to=${to}\nsubject: ${subject}\n\n${text}\n`)
+    const attachmentInfo = attachments?.length
+      ? `\nattachments: ${attachments.map((a) => a.filename).join(", ")}`
+      : ""
+    console.info(`\n[email] to=${to}\nsubject: ${subject}${attachmentInfo}\n\n${text}\n`)
     return
   }
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from: FROM, to, subject, text, html }),
+    body: JSON.stringify({
+      from: FROM,
+      to,
+      subject,
+      text,
+      html,
+      ...(attachments && attachments.length > 0 ? { attachments } : {}),
+    }),
   })
   if (!res.ok) throw new Error(`Resend ${res.status}: ${await res.text()}`)
 }
@@ -90,21 +114,63 @@ export function sendAlreadySupporting(to: string, crosswalkId: string, label: La
   })
 }
 
-export function sendRequestPublished(to: string, crosswalkId: string, label: Label) {
+export type CrosswalkForEmail = {
+  id: string
+  label: string | null
+  locality?: string | null
+}
+
+export async function sendRequestPublished(
+  to: string,
+  crosswalkOrId: string | CrosswalkForEmail,
+  maybeLabel?: Label
+) {
+  const crosswalk: CrosswalkForEmail =
+    typeof crosswalkOrId === "string"
+      ? { id: crosswalkOrId, label: maybeLabel ?? null, locality: null }
+      : crosswalkOrId
+
+  const [colorPdf, printPdf] = await Promise.all([
+    renderSignPdf({
+      id: crosswalk.id,
+      label: crosswalk.label,
+      locality: crosswalk.locality ?? null,
+      variant: "color",
+    }),
+    renderSignPdf({
+      id: crosswalk.id,
+      label: crosswalk.label,
+      locality: crosswalk.locality ?? null,
+      variant: "print",
+    }),
+  ])
+
   return send({
     to,
-    subject: `Your crosswalk request${atPlace(label)} is live`,
+    subject: `Your crosswalk request${atPlace(crosswalk.label)} is live`,
     paragraphs: [
-      `Your request for a crosswalk${atPlace(label)} is now on the map.`,
-      "Next step: print the half-page sign and post it at the spot so neighbors can scan the QR code and add their names. Tip: print on cardstock and use a sheet protector to keep it dry.",
+      `Your request for a crosswalk${atPlace(crosswalk.label)} is now on the map.`,
+      "Next step: print the half-page sign and post it at the spot so neighbors can scan the QR code and add their names. We've attached both the full color and printer-friendly PDF signs to this email so you can print them directly. Tip: print on cardstock and use a sheet protector to keep it dry.",
     ],
     cta: [
-      { label: "Print sign: full color", url: `${crosswalkUrl(crosswalkId)}/sign` },
+      { label: "Print sign: full color", url: `${crosswalkUrl(crosswalk.id)}/sign` },
       {
         label: "Print sign: printer friendly",
-        url: `${crosswalkUrl(crosswalkId)}/sign?style=print`,
+        url: `${crosswalkUrl(crosswalk.id)}/sign?style=print`,
       },
-      { label: "View the request", url: crosswalkUrl(crosswalkId) },
+      { label: "View the request", url: crosswalkUrl(crosswalk.id) },
+    ],
+    attachments: [
+      {
+        filename: `crosswalk-sign-${crosswalk.id}-color.pdf`,
+        content: Buffer.from(colorPdf).toString("base64"),
+        content_type: "application/pdf",
+      },
+      {
+        filename: `crosswalk-sign-${crosswalk.id}-print.pdf`,
+        content: Buffer.from(printPdf).toString("base64"),
+        content_type: "application/pdf",
+      },
     ],
   })
 }

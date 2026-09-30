@@ -16,12 +16,23 @@ export async function GET(request: NextRequest) {
   if (firstTime) {
     after(async () => {
       const [crosswalk] = await db
-        .select({ label: crosswalks.label })
+        .select({
+          id: crosswalks.id,
+          label: crosswalks.label,
+          locality: crosswalks.locality,
+        })
         .from(crosswalks)
         .where(eq(crosswalks.id, supporter.crosswalkId))
       if (!crosswalk) return
-      const send = supporter.isRequester ? sendRequestPublished : sendSupportConfirmed
-      await send(supporter.email, supporter.crosswalkId, crosswalk.label)
+      try {
+        if (supporter.isRequester) {
+          await sendRequestPublished(supporter.email, crosswalk)
+        } else {
+          await sendSupportConfirmed(supporter.email, crosswalk.id, crosswalk.label)
+        }
+      } catch (err) {
+        console.error("Failed to send post-verification email", err)
+      }
     })
   }
 
