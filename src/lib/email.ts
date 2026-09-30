@@ -189,3 +189,40 @@ export function sendSupportConfirmed(to: string, crosswalkId: string, label: Lab
     ],
   })
 }
+
+export function sendSupporterJoined({
+  to,
+  requesterName,
+  supporterName,
+  crosswalkId,
+  label,
+  supporterCount,
+}: {
+  to: string
+  requesterName: string
+  supporterName?: string | null
+  crosswalkId: string
+  label: Label
+  supporterCount?: number
+}) {
+  const who = supporterName ? supporterName : "A neighbor"
+  const countParagraph =
+    typeof supporterCount === "number" && supporterCount > 0
+      ? `Your request now has ${supporterCount} ${supporterCount === 1 ? "supporter" : "supporters"}.`
+      : null
+
+  return send({
+    to,
+    subject: `Someone joined your crosswalk request${atPlace(label)}`,
+    paragraphs: [
+      `Hi ${requesterName},`,
+      `${who} just joined your request for a crosswalk${atPlace(label)}.`,
+      ...(countParagraph ? [countParagraph] : []),
+      "As more neighbors join, your case for a crosswalk gets stronger. When you're ready, you can print or copy your form letter to send to your city.",
+    ],
+    cta: [
+      { label: "View the request", url: crosswalkUrl(crosswalkId) },
+      { label: "Form letter to your city", url: `${crosswalkUrl(crosswalkId)}/letter` },
+    ],
+  })
+}

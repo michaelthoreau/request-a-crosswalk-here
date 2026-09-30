@@ -44,6 +44,31 @@ export async function getPublicSupporterNames(crosswalkId: string) {
   return rows.map((r) => r.name)
 }
 
+export async function getCrosswalkRequester(crosswalkId: string) {
+  const [requester] = await db
+    .select({
+      id: supporters.id,
+      name: supporters.name,
+      email: supporters.email,
+    })
+    .from(supporters)
+    .where(and(eq(supporters.crosswalkId, crosswalkId), eq(supporters.isRequester, true)))
+  return requester ?? null
+}
+
+export async function getVerifiedSupporterCount(crosswalkId: string) {
+  const [row] = await db
+    .select({ count: count() })
+    .from(supporters)
+    .where(
+      and(
+        eq(supporters.crosswalkId, crosswalkId),
+        isNotNull(supporters.verifiedAt)
+      )
+    )
+  return row?.count ?? 0
+}
+
 export type CrosswalkPoint = {
   id: string
   label: string | null

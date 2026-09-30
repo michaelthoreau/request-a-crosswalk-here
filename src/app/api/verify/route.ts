@@ -2,8 +2,16 @@ import { eq } from "drizzle-orm"
 import { after, type NextRequest } from "next/server"
 import { db } from "@/db"
 import { crosswalks } from "@/db/schema"
-import { consumeVerificationToken } from "@/lib/crosswalks"
-import { sendRequestPublished, sendSupportConfirmed } from "@/lib/email"
+import {
+  consumeVerificationToken,
+  getCrosswalkRequester,
+  getVerifiedSupporterCount,
+} from "@/lib/crosswalks"
+import {
+  sendRequestPublished,
+  sendSupportConfirmed,
+  sendSupporterJoined,
+} from "@/lib/email"
 
 export async function GET(request: NextRequest) {
   const token = request.nextUrl.searchParams.get("token")
@@ -28,7 +36,26 @@ export async function GET(request: NextRequest) {
         if (supporter.isRequester) {
           await sendRequestPublished(supporter.email, crosswalk)
         } else {
-          await sendSupportConfirmed(supporter.email, crosswalk.id, crosswalk.label)
+          await Promise.allSettled([
+            sendSupportConfirmed(supporter.email, crosswalk.id, crosswalk.label).catch(
+              (err) => console.error("Failed to send support confirmation email", err)
+            ),
+            (async () => {
+              const requester = await getCrosswalkRequester(crosswalk.id)
+              if (!requester?.email || requester.email === supporter.email) return
+              const count = await getVerifiedSupporterCount(crosswalk.id)
+              await sendSupporterJoined({
+                to: requester.email,
+                requesterName: requester.name,
+                supporterName: supporter.showName ? supporter.name : null,
+                crosswalkId: crosswalk.id,
+                label: crosswalk.label,
+                supporterCount: count,
+              })
+            })().catch((err) =>
+              console.error("Failed to send supporter joined email to requester", err)
+            ),
+          ])
         }
       } catch (err) {
         console.error("Failed to send post-verification email", err)
