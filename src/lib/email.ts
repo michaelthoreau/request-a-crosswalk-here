@@ -99,7 +99,11 @@ export function sendRequestPublished(to: string, crosswalkId: string, label: Lab
       "Next step: print the half-page sign and post it at the spot so neighbors can scan the QR code and add their names. Tip: print on cardstock and use a sheet protector to keep it dry.",
     ],
     cta: [
-      { label: "Print the sign", url: `${crosswalkUrl(crosswalkId)}/sign` },
+      { label: "Print sign: full color", url: `${crosswalkUrl(crosswalkId)}/sign` },
+      {
+        label: "Print sign: printer friendly",
+        url: `${crosswalkUrl(crosswalkId)}/sign?style=print`,
+      },
       { label: "View the request", url: crosswalkUrl(crosswalkId) },
     ],
   })

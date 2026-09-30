@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { useActionState, useEffect, useRef, useState, useTransition } from "react"
 import { lookupPoint, requestCrosswalk } from "@/app/actions"
+import { CheckEmailNotice } from "@/components/check-email-notice"
 import { ContactFields } from "@/components/contact-fields"
 import { LocationPicker } from "@/components/map/location-picker"
 import { MapOverlay } from "@/components/map/map-overlay"
@@ -60,6 +61,7 @@ export function RequestFlow({
 
   const nearby = lookup?.nearby ?? []
   const showNearby = !lookingUp && nearby.length > 0 && !ignoreNearby
+  const sent = state?.sent
 
   return (
     <div className="grid h-map-screen grid-rows-[45%_55%] overflow-hidden lg:grid-cols-[1fr_26rem] lg:grid-rows-1">
@@ -74,16 +76,27 @@ export function RequestFlow({
       </div>
 
       <div className="flex min-h-0 flex-col gap-4 overflow-y-auto overscroll-contain border-t p-4 *:shrink-0 lg:border-t-0 lg:border-l">
-        <Card>
-          <CardHeader>
-            <CardTitle>1. Find the spot</CardTitle>
-            <CardDescription>
-              Click the map where the crosswalk should go. Drag the pin to fine-tune.
-            </CardDescription>
-          </CardHeader>
-        </Card>
+        {sent ? (
+          <CheckEmailNotice
+            email={state.values?.email}
+            purpose="put your crosswalk on the map"
+          >
+            <Link href="/" className={buttonVariants({ variant: "outline" })}>
+              Back to the map
+            </Link>
+          </CheckEmailNotice>
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle>1. Find the spot</CardTitle>
+              <CardDescription>
+                Click the map where the crosswalk should go. Drag the pin to fine-tune.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        )}
 
-        {picked && (
+        {!sent && picked && (
           <Card>
             <CardHeader>
               <CardTitle>2. Confirm the location</CardTitle>
@@ -146,7 +159,7 @@ export function RequestFlow({
           </Card>
         )}
 
-        {picked && !lookingUp && !showNearby && (
+        {!sent && picked && !lookingUp && !showNearby && (
           <Card>
             <CardHeader>
               <CardTitle>3. Your info</CardTitle>

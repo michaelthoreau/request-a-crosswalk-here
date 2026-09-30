@@ -2,7 +2,6 @@
 
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto"
 import { and, eq } from "drizzle-orm"
-import { redirect } from "next/navigation"
 import { z } from "zod"
 import { db } from "@/db"
 import { crosswalks, supporters } from "@/db/schema"
@@ -46,6 +45,7 @@ const emailPreferenceSchema = z.enum(["no-spam", "no-spam-2"], {
 type FieldName = "name" | "email" | "address" | "emailPreference"
 
 export type FormState = {
+  sent?: boolean
   error?: string
   fieldErrors?: Partial<Record<FieldName, string[]>>
   values?: Record<string, string>
@@ -155,7 +155,7 @@ export async function requestCrosswalk(
       return { error: "We couldn't send the confirmation email. Please try again.", values }
     }
   }
-  redirect("/check-email")
+  return { sent: true, values }
 }
 
 export async function supportCrosswalk(
@@ -205,5 +205,5 @@ export async function supportCrosswalk(
     console.error("Failed to send support email", error)
     return { error: "We couldn't send the confirmation email. Please try again.", values }
   }
-  redirect("/check-email")
+  return { sent: true, values }
 }

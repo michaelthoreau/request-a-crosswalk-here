@@ -5,7 +5,7 @@ import { notFound } from "next/navigation"
 import { cache } from "react"
 import { CrosswalkMap } from "@/components/map/crosswalk-map"
 import { CopyButton } from "@/components/copy-button"
-import { SupportForm } from "@/components/support-form"
+import { SupportStep } from "@/components/support-form"
 import { Wordmark } from "@/components/wordmark"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
@@ -80,25 +80,11 @@ export default async function CrosswalkPage({ params, searchParams }: PageProps<
           </div>
         </Card>
 
-        <Card className="ring-2 ring-primary">
-          <CardHeader>
-            <CardTitle className="text-lg">Step 1: Sign up to support this crosswalk</CardTitle>
-            <CardDescription>
-              {alreadySigned
-                ? "You're signed up. On to step 2!"
-                : "Haven't signed yet? Start here. We'll email you a link to confirm, then you're counted."}
-            </CardDescription>
-          </CardHeader>
-          {!alreadySigned && (
-            <CardContent>
-              <SupportForm crosswalkId={crosswalk.id} />
-            </CardContent>
-          )}
-        </Card>
+        <SupportStep crosswalkId={crosswalk.id} alreadySigned={alreadySigned} />
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Step 2: Spread the word</CardTitle>
+            <CardTitle className="text-lg">Step 2: Put up a sign</CardTitle>
             <CardDescription>
               Print a sign and post it at the spot so neighbors can scan it.
             </CardDescription>
