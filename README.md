@@ -2,6 +2,8 @@
 
 [requestacrosswalkhere.org](https://requestacrosswalkhere.org). Mark a spot that needs a crosswalk, post a half-letter sign with a QR code, and gather neighbors' support.
 
+> **Note:** This app is 100% vibe coded, but also we should have more crosswalks.
+
 Next.js 16, shadcn/ui (Base UI), Drizzle + libSQL (SQLite locally, Turso in prod), MapLibre + OpenFreeMap tiles, OpenStreetMap Overpass, Postmark, react-pdf.
 
 ## Setup
