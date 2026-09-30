@@ -1,36 +1,31 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Request a Crosswalk Here
 
-## Getting Started
+[requestacrosswalkhere.org](https://requestacrosswalkhere.org). Mark a spot that needs a crosswalk, post a half-letter sign with a QR code, and gather neighbors' support.
 
-First, run the development server:
+Next.js 16, shadcn/ui (Base UI), Drizzle + libSQL (SQLite locally, Turso in prod), MapLibre + OpenFreeMap tiles, OpenStreetMap Overpass, Postmark, react-pdf.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
+## Setup
+
+```sh
+pnpm install
+cp .env.example .env.local   # set APP_SECRET (openssl rand -base64 32)
+pnpm db:migrate
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Without `POSTMARK_SERVER_TOKEN`, emails (including magic links) are printed to the server console.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Flows
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Request** (`/request`): pick a spot, cross streets resolved via Overpass, nearby requests (50 m) suggested instead. Request stays `pending` until the email link is clicked, then it goes on the map and the requester gets a link to the sign.
+- **Support** (`/c/[id]`, the QR target): name, email, optional address, optional public name. Counted after email confirmation; confirmation email invites them to request another crosswalk.
+- **Sign** (`/c/[id]/sign`): half-letter PDF.
+- **Form letter** (`/c/[id]/letter`): editable recipient, print or copy.
 
-## Learn More
+## Database
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```sh
+pnpm db:generate   # after editing src/db/schema.ts
+pnpm db:migrate    # applies to DATABASE_URL (local file or Turso)
+pnpm db:studio
+```
