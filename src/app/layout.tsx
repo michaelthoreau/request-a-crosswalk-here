@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { Analytics } from "@vercel/analytics/next"
 import { Toaster } from "@/components/ui/sonner"
 import { SITE_URL } from "@/lib/site"
 import "./globals.css"
@@ -19,6 +20,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="flex min-h-full flex-col">
         <main className="flex flex-1 flex-col">{children}</main>
         <Toaster theme="light" />
+        <Analytics />
       </body>
     </html>
   )
